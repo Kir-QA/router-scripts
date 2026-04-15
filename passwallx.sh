@@ -53,6 +53,7 @@ printf "${YELLOW} 2.${NC} ${CYAN}Install PassWall v2 + \u0440\u0443\u0441\u0441\
 printf "${YELLOW} 3.${NC} ${CYAN}Install compact geosite/geoip (RU-focused)${NC}\n"
 printf "${YELLOW} 4.${NC} ${YELLOW}Update PassWall v1 (opkg)${NC}\n"
 printf "${YELLOW} 5.${NC} ${YELLOW}Update PassWall v2 (opkg)${NC}\n"
+printf "${YELLOW} 6.${NC} ${RED}Uninstall PassWall v1/v2 + restore dnsmasq${NC}\n"
 printf "${YELLOW} 0.${NC} ${RED}Exit${NC}\n"
 echo
 
@@ -77,6 +78,7 @@ case "$choice" in
     3) run_remote install-geo-compact.sh   ;;
     4) opkg update && opkg install luci-app-passwall  ;;
     5) opkg update && opkg install luci-app-passwall2 ;;
+    6) run_remote uninstall-passwall.sh    ;;
     0) echo "bye"; exit 0                  ;;
     *) echo "invalid option"; exit 1       ;;
 esac

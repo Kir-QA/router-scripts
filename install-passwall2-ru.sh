@@ -23,20 +23,23 @@ die()  { printf '%b\n' "${RED}[X]${NC} $*" >&2; exit 1; }
 . /etc/openwrt_release
 
 ARCH="${DISTRIB_ARCH:-}"
-[ -n "$ARCH" ] || die "cannot detect DISTRIB_ARCH"
+REL_RAW="${DISTRIB_RELEASE:-}"
+[ -n "$ARCH" ]    || die "cannot detect DISTRIB_ARCH (empty in /etc/openwrt_release)"
+[ -n "$REL_RAW" ] || die "cannot detect DISTRIB_RELEASE (empty in /etc/openwrt_release)"
 
 # detect release branch for feed URL
-if printf '%s' "$DISTRIB_RELEASE" | grep -qi snapshot; then
+if printf '%s' "$REL_RAW" | grep -qi snapshot; then
     RELEASE="SNAPSHOT"
     SOURCE="snapshots"
 else
-    RELEASE="${DISTRIB_RELEASE%.*}"      # 24.10.6 -> 24.10
+    RELEASE="${REL_RAW%.*}"              # 24.10.6 -> 24.10
     SOURCE="releases"
 fi
+[ -n "$RELEASE" ] || die "computed empty RELEASE from DISTRIB_RELEASE='$REL_RAW'"
 
 BASE="https://master.dl.sourceforge.net/project/openwrt-passwall-build/${SOURCE}/packages-${RELEASE}/${ARCH}"
 
-say "OpenWrt $DISTRIB_RELEASE ($ARCH); feed branch: $SOURCE/packages-$RELEASE"
+say "OpenWrt $REL_RAW ($ARCH); feed branch: $SOURCE/packages-$RELEASE"
 say "Feed base: $BASE"
 
 # ---------- prerequisites ----------

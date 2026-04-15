@@ -1,0 +1,8 @@
+# Shell scripts must be LF — busybox sh on OpenWrt chokes on CRLF shebangs.
+*.sh        text eol=lf
+
+# Binary geo files — never touch.
+*.dat       binary
+
+# Checksum manifest is plain text but LF for consistency.
+SHA256SUMS  text eol=lf
