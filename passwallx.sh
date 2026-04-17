@@ -44,8 +44,10 @@ echo "Repo: $REPO_RAW"
 echo
 
 # running-state hints
-[ -x /etc/init.d/passwall ]  && echo " \u2713 PassWall v1 is installed"
-[ -x /etc/init.d/passwall2 ] && echo " \u2713 PassWall v2 is installed"
+[ -x /etc/init.d/passwall ]     && echo " \u2713 PassWall v1 is installed"
+[ -x /etc/init.d/passwall2 ]    && echo " \u2713 PassWall v2 is installed"
+[ -x /etc/init.d/xray-health ]  && echo " \u2713 Xray health monitor is running"
+grep -qs zram /proc/swaps        && echo " \u2713 zram swap is active"
 echo
 
 printf "${YELLOW} 1.${NC} ${CYAN}Install PassWall v1${NC}\n"
@@ -54,6 +56,8 @@ printf "${YELLOW} 3.${NC} ${CYAN}Install compact geosite/geoip (RU-focused)${NC}
 printf "${YELLOW} 4.${NC} ${YELLOW}Update PassWall v1 (opkg)${NC}\n"
 printf "${YELLOW} 5.${NC} ${YELLOW}Update PassWall v2 (opkg)${NC}\n"
 printf "${YELLOW} 6.${NC} ${RED}Uninstall PassWall v1/v2 + restore dnsmasq${NC}\n"
+printf "${YELLOW} 7.${NC} ${CYAN}Install Xray health monitor (LuCI widget + LED)${NC}\n"
+printf "${YELLOW} 8.${NC} ${CYAN}Install zram swap (lz4, 128 MB)${NC}\n"
 printf "${YELLOW} 0.${NC} ${RED}Exit${NC}\n"
 echo
 
@@ -79,6 +83,8 @@ case "$choice" in
     4) opkg update && opkg install luci-app-passwall  ;;
     5) opkg update && opkg install luci-app-passwall2 ;;
     6) run_remote uninstall-passwall.sh    ;;
+    7) run_remote install-xray-health.sh   ;;
+    8) run_remote install-zram.sh          ;;
     0) echo "bye"; exit 0                  ;;
     *) echo "invalid option"; exit 1       ;;
 esac

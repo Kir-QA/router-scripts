@@ -9,12 +9,14 @@ geosite/geoip под российские CDN.
 
 | Файл | Что делает |
 |---|---|
-| `passwallx.sh` | Меню-лаунчер: выбор v1 / v2+RU / компактный гео / обновления / uninstall |
+| `passwallx.sh` | Меню-лаунчер: v1 / v2+RU / компактный гео / обновления / uninstall / xray-health / zram |
 | `install-passwall.sh` | Чистая установка **PassWall v1** (русского локализации у v1 в feed'е нет) |
 | `install-passwall2-ru.sh` | Чистая установка **PassWall v2 + `luci-i18n-passwall2-ru`** |
 | `install-geo-compact.sh` | Ставит в `/usr/share/v2ray/` уменьшенные `geosite.dat` (1.6 МБ) и `geoip.dat` (389 КБ). Проверяет sha256 против `SHA256SUMS`. Содержит `category-ru` + YANDEX, AVITO, MAILRU, VK, OZON, DZEN, SBER, KINOPOISK, WILDBERRIES, RUTUBE и т.д.; `geoip:ru` + private |
 | `uninstall-passwall.sh` | Чистый снос v1/v2: стопит сервисы, удаляет пакеты, возвращает stock `dnsmasq`, восстанавливает `geosite/geoip.dat` из `.bak.*`, чистит passwall-feed'ы |
 | `geosite.dat`, `geoip.dat` | Сами компактные файлы, подаются через raw.githubusercontent |
+| `install-xray-health.sh` | Ставит мониторинг xray: демон (`/usr/share/passwall/xray-health.sh`), виджет на главной LuCI (Xray Health), LED `amber:net` (горит=был OOM, мигает=xray мёртв) |
+| `install-zram.sh` | Настраивает zram swap (lz4, 128 МБ) — критично для роутеров ≤256 МБ RAM с xray |
 | `SHA256SUMS` | sha256 для `geosite.dat` / `geoip.dat` — используется `install-geo-compact.sh` для защиты от tampering при `--no-check-certificate` fallback'е |
 
 ## Быстрый старт
