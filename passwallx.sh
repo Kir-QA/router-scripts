@@ -22,6 +22,15 @@ RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC
 [ "$(id -u)" = 0 ] || { echo "run as root" >&2; exit 1; }
 [ -f /etc/openwrt_release ] || { echo "not OpenWrt" >&2; exit 1; }
 
+# detect package manager (apk for SNAPSHOT/25.x, opkg for 24.10)
+if command -v apk >/dev/null 2>&1; then
+    PM=apk
+elif command -v opkg >/dev/null 2>&1; then
+    PM=opkg
+else
+    PM=unknown
+fi
+
 # shellcheck disable=SC1091
 . /etc/openwrt_release
 
@@ -38,23 +47,30 @@ cat <<'BANNER'
 BANNER
 printf '%b' "${NC}"
 
-echo "Router: $(cat /tmp/sysinfo/model 2>/dev/null || echo unknown)"
-echo "OpenWrt: $DISTRIB_RELEASE ($DISTRIB_ARCH)"
-echo "Repo: $REPO_RAW"
+echo "Router:  $(cat /tmp/sysinfo/model 2>/dev/null || echo unknown)"
+echo "OpenWrt: $DISTRIB_RELEASE ($DISTRIB_ARCH)  pm=$PM"
+echo "Repo:    $REPO_RAW"
 echo
 
 # running-state hints
-[ -x /etc/init.d/passwall ]     && echo " \u2713 PassWall v1 is installed"
-[ -x /etc/init.d/passwall2 ]    && echo " \u2713 PassWall v2 is installed"
-[ -x /etc/init.d/xray-health ]  && echo " \u2713 Xray health monitor is running"
-grep -qs zram /proc/swaps        && echo " \u2713 zram swap is active"
+[ -x /etc/init.d/passwall ]     && echo " ✓ PassWall v1 is installed"
+[ -x /etc/init.d/passwall2 ]    && echo " ✓ PassWall v2 is installed"
+[ -x /etc/init.d/xray-health ]  && echo " ✓ Xray health monitor is running"
+grep -qs zram /proc/swaps       && echo " ✓ zram swap is active"
 echo
 
-printf "${YELLOW} 1.${NC} ${CYAN}Install PassWall v1${NC}\n"
-printf "${YELLOW} 2.${NC} ${CYAN}Install PassWall v2 + \u0440\u0443\u0441\u0441\u043a\u0438\u0439 \u044f\u0437\u044b\u043a${NC}   (recommended, requires >256 MB RAM)\n"
+# choose v1 installer based on package manager
+if [ "$PM" = "apk" ]; then
+    V1_SCRIPT="install-passwall-apk.sh"
+else
+    V1_SCRIPT="install-passwall.sh"
+fi
+
+printf "${YELLOW} 1.${NC} ${CYAN}Install PassWall v1${NC}  (auto: %s)\n" "$V1_SCRIPT"
+printf "${YELLOW} 2.${NC} ${CYAN}Install PassWall v2 + русский язык${NC}   (recommended, requires >256 MB RAM)\n"
 printf "${YELLOW} 3.${NC} ${CYAN}Install compact geosite/geoip (RU-focused)${NC}\n"
-printf "${YELLOW} 4.${NC} ${YELLOW}Update PassWall v1 (opkg)${NC}\n"
-printf "${YELLOW} 5.${NC} ${YELLOW}Update PassWall v2 (opkg)${NC}\n"
+printf "${YELLOW} 4.${NC} ${YELLOW}Update PassWall v1${NC}\n"
+printf "${YELLOW} 5.${NC} ${YELLOW}Update PassWall v2${NC}\n"
 printf "${YELLOW} 6.${NC} ${RED}Uninstall PassWall v1/v2 + restore dnsmasq${NC}\n"
 printf "${YELLOW} 7.${NC} ${CYAN}Install Xray health monitor (LuCI widget + LED)${NC}\n"
 printf "${YELLOW} 8.${NC} ${CYAN}Install zram swap (lz4, 128 MB)${NC}\n"
@@ -66,22 +82,30 @@ read -r choice
 
 run_remote() {
     # $1 = script filename
-    local f="$1"
+    f="$1"
     echo "Fetching $REPO_RAW/$f"
     rm -f "/tmp/$f"
     if ! wget -q -O "/tmp/$f" "$REPO_RAW/$f"; then
-        echo "${RED}wget failed${NC}"; return 1
+        echo "wget failed"; return 1
     fi
     chmod +x "/tmp/$f"
     sh "/tmp/$f"
 }
 
+pm_install() {
+    if [ "$PM" = "apk" ]; then
+        apk update --allow-untrusted && apk add --allow-untrusted "$@"
+    else
+        opkg update && opkg install "$@"
+    fi
+}
+
 case "$choice" in
-    1) run_remote install-passwall.sh      ;;
+    1) run_remote "$V1_SCRIPT"             ;;
     2) run_remote install-passwall2-ru.sh  ;;
     3) run_remote install-geo-compact.sh   ;;
-    4) opkg update && opkg install luci-app-passwall  ;;
-    5) opkg update && opkg install luci-app-passwall2 ;;
+    4) pm_install luci-app-passwall        ;;
+    5) pm_install luci-app-passwall2       ;;
     6) run_remote uninstall-passwall.sh    ;;
     7) run_remote install-xray-health.sh   ;;
     8) run_remote install-zram.sh          ;;
